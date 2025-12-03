@@ -1,25 +1,25 @@
-// En el archivo credential.js
+// Archivo: js/credential.js
 
 function createMqttClient(clientId) {
-    const brokerUrl = 'wss://11c98208298d41e6aa134fb9838e6cf0.s1.eu.hivemq.cloud';
+    // --- INICIO DE LA CORRECCIÓN ---
+    // Usaremos el puerto 443, que casi nunca está bloqueado.
+    // Para ello, la URL debe terminar en "/mqtt".
+    const brokerUrl = 'wss://11c98208298d41e6aa134fb9838e6cf0.s1.eu.hivemq.cloud:443/mqtt';
 
     const options = {
-        port: 8884,
+        // Ya no especificamos el puerto aquí, va incluido en la URL.
         clientId: 'DashboardWeb_' + Math.random().toString(16).substr(2, 8),
         clean: true,
-        connectTimeout: 4000,
-        username: 'testuser',
-        password: 'Test1234',
+        connectTimeout: 10000, // Aumentamos el tiempo de espera a 10s
         reconnectPeriod: 1000,
-
-        // --- INICIO DE LA CORRECCIÓN ---
-        // Especificar explícitamente el protocolo WebSocket.
-        // Esto a menudo resuelve el error "connection is closed before established".
-        protocol: 'wss'
-        // --- FIN DE LA CORRECCIÓN ---
+        protocol: 'wss',
+        username: 'buzon.app',
+        password: 'Hola1234',
     };
+    // --- FIN DE LA CORRECCIÓN ---
 
-    console.log(`Conectando a ${brokerUrl} en el puerto ${options.port} con el cliente ID: ${options.clientId}`);
+    console.log(`Conectando a ${brokerUrl} con el cliente ID: ${options.clientId}`);
     const client = mqtt.connect(brokerUrl, options);
     return client;
 }
+
