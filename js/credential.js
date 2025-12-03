@@ -8,9 +8,10 @@ function createMqttClient(clientId) {
         reconnectPeriod: 1000,
         protocol: 'wss',
         username: 'buzon.app',
-        password: 'Hola1234',
+        password: 'BuzonApp123!',
     };
     console.log(`Conectando a ${brokerUrl} en el puerto ${options.port} con el cliente ID: ${options.clientId}`);
     const client = mqtt.connect(brokerUrl, options);
     return client;
 }
+
