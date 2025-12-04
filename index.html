@@ -4,147 +4,34 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Dashboard - SmartPost (Buzón Inteligente)</title>
-    <script src="https://unpkg.com/mqtt/dist/mqtt.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/paho-mqtt/1.0.1/mqttws31.min.js"></script>
     <style>
-        * {
-            margin: 0;
-            padding: 0;
-            box-sizing: border-box;
-        }
-        body {
-            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-            min-height: 100vh;
-            padding: 20px;
-            color: white;
-        }
-        .container {
-            max-width: 1200px;
-            margin: 0 auto;
-        }
-        h1 {
-            text-align: center;
-            margin-bottom: 20px;
-            font-size: 2.5em;
-            text-shadow: 2px 2px 4px rgba(0,0,0,0.3);
-        }
-        .status {
-            text-align: center;
-            padding: 15px;
-            margin-bottom: 20px;
-            border-radius: 10px;
-            font-weight: bold;
-            font-size: 18px;
-            transition: all 0.3s;
-        }
-        .status.connected {
-            background: rgba(76, 175, 80, 0.3);
-            border: 2px solid #4caf50;
-        }
-        .status.disconnected {
-            background: rgba(244, 67, 54, 0.3);
-            border: 2px solid #f44336;
-        }
-        .main-card {
-            background: rgba(255, 255, 255, 0.15);
-            backdrop-filter: blur(10px);
-            border-radius: 20px;
-            padding: 40px;
-            margin: 20px 0;
-            border: 2px solid rgba(255, 255, 255, 0.3);
-            text-align: center;
-            transition: all 0.3s;
-        }
-        .main-card:hover {
-            transform: translateY(-5px);
-            box-shadow: 0 15px 40px rgba(0,0,0,0.3);
-        }
-        .mailbox-icon {
-            font-size: 8em;
-            margin: 20px 0;
-            transition: all 0.5s;
-        }
-        .mailbox-icon.empty {
-            opacity: 0.5;
-        }
-        .mailbox-icon.full {
-            animation: bounce 0.6s ease;
-        }
-        @keyframes bounce {
-            0%, 100% { transform: translateY(0); }
-            50% { transform: translateY(-20px); }
-        }
-        .mailbox-status {
-            font-size: 3em;
-            font-weight: bold;
-            margin: 20px 0;
-            text-transform: uppercase;
-            letter-spacing: 3px;
-        }
-        .mailbox-status.empty {
-            color: #4caf50;
-            text-shadow: 0 0 20px rgba(76, 175, 80, 0.5);
-        }
-        .mailbox-status.full {
-            color: #ff9800;
-            text-shadow: 0 0 20px rgba(255, 152, 0, 0.5);
-            animation: pulse 2s infinite;
-        }
-        @keyframes pulse {
-            0%, 100% { opacity: 1; }
-            50% { opacity: 0.7; }
-        }
-        .action-button {
-            padding: 15px 30px;
-            font-size: 1.2em;
-            font-weight: bold;
-            color: white;
-            background: linear-gradient(135deg, #f57c00 0%, #e65100 100%);
-            border: none;
-            border-radius: 10px;
-            cursor: pointer;
-            transition: all 0.3s;
-            margin-top: 20px;
-        }
-        .action-button:hover {
-            transform: translateY(-3px);
-            box-shadow: 0 10px 20px rgba(0,0,0,0.2);
-        }
-        .logs-container {
-            background: rgba(0, 0, 0, 0.3);
-            border-radius: 15px;
-            padding: 25px;
-            margin-top: 20px;
-            max-height: 400px;
-            overflow-y: auto;
-        }
-        .logs-container h3 {
-            margin-bottom: 15px;
-            font-size: 1.5em;
-        }
-        .log-entry {
-            padding: 12px;
-            margin: 8px 0;
-            background: rgba(255, 255, 255, 0.1);
-            border-radius: 8px;
-            border-left: 4px solid #4caf50;
-            font-family: 'Courier New', monospace;
-            font-size: 0.9em;
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-        }
-        .log-entry.command {
-            border-left-color: #2196F3;
-            background: rgba(33, 150, 243, 0.2);
-        }
-        .log-entry.error {
-            border-left-color: #f44336;
-        }
-        .log-timestamp {
-            color: rgba(255, 255, 255, 0.6);
-            font-size: 0.85em;
-        }
+        /* TUS ESTILOS VISUALES ORIGINALES (INTACTOS) */
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); min-height: 100vh; padding: 20px; color: white; }
+        .container { max-width: 1200px; margin: 0 auto; }
+        h1 { text-align: center; margin-bottom: 20px; font-size: 2.5em; text-shadow: 2px 2px 4px rgba(0,0,0,0.3); }
+        .status { text-align: center; padding: 15px; margin-bottom: 20px; border-radius: 10px; font-weight: bold; font-size: 18px; transition: all 0.3s; }
+        .status.connected { background: rgba(76, 175, 80, 0.3); border: 2px solid #4caf50; }
+        .status.disconnected { background: rgba(244, 67, 54, 0.3); border: 2px solid #f44336; }
+        .main-card { background: rgba(255, 255, 255, 0.15); backdrop-filter: blur(10px); border-radius: 20px; padding: 40px; margin: 20px 0; border: 2px solid rgba(255, 255, 255, 0.3); text-align: center; transition: all 0.3s; }
+        .main-card:hover { transform: translateY(-5px); box-shadow: 0 15px 40px rgba(0,0,0,0.3); }
+        .mailbox-icon { font-size: 8em; margin: 20px 0; transition: all 0.5s; }
+        .mailbox-icon.empty { opacity: 0.5; }
+        .mailbox-icon.full { animation: bounce 0.6s ease; }
+        @keyframes bounce { 0%, 100% { transform: translateY(0); } 50% { transform: translateY(-20px); } }
+        .mailbox-status { font-size: 3em; font-weight: bold; margin: 20px 0; text-transform: uppercase; letter-spacing: 3px; }
+        .mailbox-status.empty { color: #4caf50; text-shadow: 0 0 20px rgba(76, 175, 80, 0.5); }
+        .mailbox-status.full { color: #ff9800; text-shadow: 0 0 20px rgba(255, 152, 0, 0.5); animation: pulse 2s infinite; }
+        @keyframes pulse { 0%, 100% { opacity: 1; } 50% { opacity: 0.7; } }
+        .action-button { padding: 15px 30px; font-size: 1.2em; font-weight: bold; color: white; background: linear-gradient(135deg, #f57c00 0%, #e65100 100%); border: none; border-radius: 10px; cursor: pointer; transition: all 0.3s; margin-top: 20px; }
+        .action-button:hover { transform: translateY(-3px); box-shadow: 0 10px 20px rgba(0,0,0,0.2); }
+        .logs-container { background: rgba(0, 0, 0, 0.3); border-radius: 15px; padding: 25px; margin-top: 20px; max-height: 400px; overflow-y: auto; }
+        .logs-container h3 { margin-bottom: 15px; font-size: 1.5em; }
+        .log-entry { padding: 12px; margin: 8px 0; background: rgba(255, 255, 255, 0.1); border-radius: 8px; border-left: 4px solid #4caf50; font-family: 'Courier New', monospace; font-size: 0.9em; display: flex; justify-content: space-between; align-items: center; }
+        .log-entry.command { border-left-color: #2196F3; background: rgba(33, 150, 243, 0.2); }
+        .log-entry.error { border-left-color: #f44336; }
+        .log-timestamp { color: rgba(255, 255, 255, 0.6); font-size: 0.85em; }
     </style>
 </head>
 <body>
@@ -165,9 +52,11 @@
     </div>
 
     <script src="js/credential.js"></script>
+    
     <script>
-        const client = createMqttClient('DashboardWebClient_Oscar');
-
+        // --- Variables Globales ---
+        var client;
+        
         // --- Elementos del DOM ---
         const statusEl = document.getElementById('status');
         const mailboxIcon = document.getElementById('mailboxIcon');
@@ -175,7 +64,7 @@
         const mailboxCard = document.getElementById('mailboxCard');
         const logsEl = document.getElementById('logs');
 
-        // --- Función para agregar logs ---
+        // --- Función para agregar logs (UI) ---
         function addLog(message, type = 'info') {
             const logEntry = document.createElement('div');
             logEntry.className = `log-entry ${type}`;
@@ -184,9 +73,11 @@
             logsEl.insertBefore(logEntry, logsEl.firstChild);
         }
 
-        // --- Función para actualizar el estado visual del buzón ---
+        // --- Función para actualizar el estado visual ---
         function updateMailboxState(state) {
-            const isFull = state === 'paquete recibido';
+            // Normalizamos el mensaje para evitar errores por mayúsculas/minúsculas
+            const cleanState = state.toLowerCase().trim();
+            const isFull = cleanState.includes('paquete recibido') || cleanState.includes('lleno');
 
             if (isFull) {
                 mailboxIcon.textContent = '📮';
@@ -194,7 +85,7 @@
                 mailboxStatus.textContent = '¡TIENES CORREO!';
                 mailboxStatus.className = 'mailbox-status full';
                 mailboxCard.style.background = 'rgba(255, 152, 0, 0.3)';
-            } else { // 'vacío' o cualquier otro estado
+            } else { 
                 mailboxIcon.textContent = '📬';
                 mailboxIcon.className = 'mailbox-icon empty';
                 mailboxStatus.textContent = 'BUZÓN VACÍO';
@@ -203,64 +94,94 @@
             }
         }
 
-        // --- Función para enviar el comando de abrir ---
-        function openMailbox() {
-            const topic = 'buzon/command';
-            const message = 'open';
-            client.publish(topic, message, { qos: 1 }, (err) => {
-                if (err) {
-                    addLog(`❌ Error al enviar comando 'open': ${err.message}`, 'error');
-                } else {
-                    addLog(`✔️ Comando 'open' enviado a ${topic}`, 'command');
-                }
-            });
+        // --- Función LÓGICA DE CONEXIÓN (Adaptada a Paho MQTT) ---
+        function startConnection() {
+            // Usamos las variables de tu archivo credential.js
+            var clientId = "WebClient_" + new Date().getTime();
+            
+            // Creamos el cliente
+            client = new Paho.MQTT.Client(mqttHost, Number(mqttPort), clientId);
+
+            // Definimos los Callbacks
+            client.onConnectionLost = onConnectionLost;
+            client.onMessageArrived = onMessageArrived;
+
+            // Opciones de conexión
+            var options = {
+                useSSL: mqttUseSSL, // Importante para HiveMQ Cloud
+                userName: mqttUser,
+                password: mqttPass,
+                onSuccess: onConnect,
+                onFailure: onFailure
+            };
+
+            addLog("Intentando conectar a HiveMQ Cloud...", "info");
+            client.connect(options);
         }
 
-        // --- Eventos del cliente MQTT ---
-        client.on('connect', () => {
+        // --- Callbacks de MQTT ---
+        function onConnect() {
             statusEl.textContent = '✅ Conectado';
             statusEl.className = 'status connected';
-            addLog('✅ Conectado al broker MQTT');
+            addLog('✅ Conexión establecida con éxito');
 
-            // Suscribirse al tópico de estado
-            const statusTopic = 'buzon/status';
-            client.subscribe(statusTopic, { qos: 1 }, (err) => {
-                if (err) {
-                    addLog(`❌ Error al suscribirse a ${statusTopic}: ${err.message}`, 'error');
-                } else {
-                    addLog(`📡 Suscrito a: ${statusTopic}`);
-                }
-            });
-        });
+            // Suscribirse al tema de estado
+            const topic = 'buzon/status';
+            client.subscribe(topic);
+            addLog(`📡 Suscrito a: ${topic}`);
+        }
 
-        client.on('error', (error) => {
-            statusEl.textContent = `❌ Error: ${error.message}`;
+        function onFailure(message) {
+            statusEl.textContent = '❌ Falló Conexión';
             statusEl.className = 'status disconnected';
-            addLog(`❌ Error MQTT: ${error.message}`, 'error');
-        });
+            addLog(`❌ Error de conexión: ${message.errorMessage}`, 'error');
+            console.log(message);
+        }
 
-        client.on('offline', () => {
-            statusEl.textContent = '⚠️ Desconectado';
-            statusEl.className = 'status disconnected';
-            addLog('⚠️ Cliente desconectado', 'error');
-        });
+        function onConnectionLost(responseObject) {
+            if (responseObject.errorCode !== 0) {
+                statusEl.textContent = '⚠️ Desconectado';
+                statusEl.className = 'status disconnected';
+                addLog(`⚠️ Conexión perdida: ${responseObject.errorMessage}`, 'error');
+            }
+        }
 
-        client.on('reconnect', () => {
-            statusEl.textContent = '🔄 Reconectando...';
-            statusEl.className = 'status disconnected';
-            addLog('🔄 Intentando reconectar...');
-        });
-
-        // --- Procesar mensajes MQTT entrantes ---
-        client.on('message', (topic, message) => {
-            const value = message.toString();
-            console.log(`[MQTT] Mensaje recibido en '${topic}': ${value}`);
-            addLog(`📬 Mensaje recibido en '${topic}': ${value}`);
+        function onMessageArrived(message) {
+            const topic = message.destinationName;
+            const payload = message.payloadString;
+            
+            console.log(`[MQTT] Mensaje en ${topic}: ${payload}`);
+            addLog(`📬 Mensaje recibido: ${payload}`);
 
             if (topic === 'buzon/status') {
-                updateMailboxState(value);
+                updateMailboxState(payload);
             }
-        });
+        }
+
+        // --- Función para ENVIAR (Publicar) ---
+        function openMailbox() {
+            if (!client || !client.isConnected()) {
+                alert("No estás conectado al sistema.");
+                return;
+            }
+
+            const topic = 'buzon/command';
+            const payload = 'open';
+
+            try {
+                // Sintaxis Paho para enviar mensajes
+                var message = new Paho.MQTT.Message(payload);
+                message.destinationName = topic;
+                client.send(message);
+                
+                addLog(`✔️ Comando 'open' enviado a ${topic}`, 'command');
+            } catch (err) {
+                addLog(`❌ Error al enviar: ${err.message}`, 'error');
+            }
+        }
+
+        // Iniciar todo
+        startConnection();
 
     </script>
 </body>
