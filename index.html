@@ -6,7 +6,7 @@
     <title>Dashboard - SmartPost (Buzón Inteligente)</title>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/paho-mqtt/1.0.1/mqttws31.min.js"></script>
     <style>
-        /* ESTILOS VISUALES (Originales) */
+        /* ESTILOS VISUALES */
         * { margin: 0; padding: 0; box-sizing: border-box; }
         body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); min-height: 100vh; padding: 20px; color: white; }
         .container { max-width: 1200px; margin: 0 auto; }
@@ -24,14 +24,9 @@
         .mailbox-status.empty { color: #4caf50; text-shadow: 0 0 20px rgba(76, 175, 80, 0.5); }
         .mailbox-status.full { color: #ff9800; text-shadow: 0 0 20px rgba(255, 152, 0, 0.5); animation: pulse 2s infinite; }
         @keyframes pulse { 0%, 100% { opacity: 1; } 50% { opacity: 0.7; } }
-        
-        /* Botones */
         .action-button { padding: 15px 30px; font-size: 1.2em; font-weight: bold; color: white; background: linear-gradient(135deg, #f57c00 0%, #e65100 100%); border: none; border-radius: 10px; cursor: pointer; transition: all 0.3s; margin-top: 20px; margin-right: 10px; }
         .action-button:hover { transform: translateY(-3px); box-shadow: 0 10px 20px rgba(0,0,0,0.2); }
-        
-        /* Estilo específico para el botón de notificación */
-        #btnNotif { background: linear-gradient(135deg, #4a69bd 0%, #1e3799 100%); font-size: 1em; }
-
+        #btnNotif { background: linear-gradient(135deg, #4a69bd 0%, #1e3799 100%); font-size: 1em; display: inline-block; }
         .logs-container { background: rgba(0, 0, 0, 0.3); border-radius: 15px; padding: 25px; margin-top: 20px; max-height: 400px; overflow-y: auto; }
         .logs-container h3 { margin-bottom: 15px; font-size: 1.5em; }
         .log-entry { padding: 12px; margin: 8px 0; background: rgba(255, 255, 255, 0.1); border-radius: 8px; border-left: 4px solid #4caf50; font-family: 'Courier New', monospace; font-size: 0.9em; display: flex; justify-content: space-between; align-items: center; }
@@ -65,10 +60,8 @@
     <script src="js/credential.js"></script>
     
     <script>
-        // --- Variables Globales ---
+        // --- 1. SETUP DE VARIABLES ---
         var client;
-        
-        // --- Elementos del DOM ---
         const statusEl = document.getElementById('status');
         const mailboxIcon = document.getElementById('mailboxIcon');
         const mailboxStatus = document.getElementById('mailboxStatus');
@@ -76,117 +69,15 @@
         const logsEl = document.getElementById('logs');
         const btnNotif = document.getElementById('btnNotif');
 
-        // --- Función para agregar logs (UI) ---
+        // --- 2. FUNCIONES DE UI ---
         function addLog(message, type = 'info') {
             const logEntry = document.createElement('div');
             logEntry.className = `log-entry ${type}`;
             const timestamp = new Date().toLocaleTimeString('es-ES');
             logEntry.innerHTML = `<span>${message}</span><span class="log-timestamp">${timestamp}</span>`;
-            logsEl.insertBefore(logEntry, logsEl.firstChild);
+            if (logsEl) logsEl.insertBefore(logEntry, logsEl.firstChild);
         }
 
-        // --- GESTIÓN DE NOTIFICACIONES ---
-        function requestNotificationPermission() {
-            if (!("Notification" in window)) {
-                alert("Tu navegador no soporta notificaciones.");
-                return;
-            }
-
-            Notification.requestPermission().then((permission) => {
-                if (permission === "granted") {
-                    addLog("🔔 Notificaciones activadas", "info");
-                    btnNotif.style.display = "none"; // Ocultar botón si ya aceptó
-                    showNotification("SmartPost", "¡Notificaciones listas!");
-                } else {
-                    addLog("⚠️ Permiso de notificaciones denegado", "error");
-                }
-            });
-        }
-
-        function showNotification(title, body) {
-            if (Notification.permission === "granted") {
-                const options = {
-                    body: body,
-                    icon: "https://cdn-icons-png.flaticon.com/512/2665/2665038.png", // Icono opcional
-                    vibrate: [200, 100, 200]
-                };
-                new Notification(title, options);
-            }
-        }
-
-        // Comprobar estado inicial de notificaciones para ocultar botón
-        if (Notification.permission === "granted") {
-            btnNotif.style.display = "none";
-        }
-
-        // --- LÓGICA DE CONEXIÓN MQTT ---
-        function startConnection() {
-            var clientId = "WebClient_" + new Date().getTime();
-            
-            // Crear cliente Paho
-            client = new Paho.MQTT.Client(mqttHost, Number(mqttPort), clientId);
-
-            client.onConnectionLost = onConnectionLost;
-            client.onMessageArrived = onMessageArrived;
-
-            var options = {
-                useSSL: mqttUseSSL,
-                userName: mqttUser,
-                password: mqttPass,
-                onSuccess: onConnect,
-                onFailure: onFailure
-            };
-
-            addLog("Intentando conectar a HiveMQ Cloud...", "info");
-            client.connect(options);
-        }
-
-        // --- Callbacks de MQTT ---
-        function onConnect() {
-            statusEl.textContent = '✅ Conectado';
-            statusEl.className = 'status connected';
-            addLog('✅ Conexión establecida con éxito');
-
-            // Suscribirse al tema de estado
-            const topic = 'buzon/status';
-            client.subscribe(topic);
-            addLog(`📡 Suscrito a: ${topic}`);
-        }
-
-        function onFailure(message) {
-            statusEl.textContent = '❌ Falló Conexión';
-            statusEl.className = 'status disconnected';
-            addLog(`❌ Error de conexión: ${message.errorMessage}`, 'error');
-            console.log(message);
-        }
-
-        function onConnectionLost(responseObject) {
-            if (responseObject.errorCode !== 0) {
-                statusEl.textContent = '⚠️ Desconectado';
-                statusEl.className = 'status disconnected';
-                addLog(`⚠️ Conexión perdida: ${responseObject.errorMessage}`, 'error');
-            }
-        }
-
-        function onMessageArrived(message) {
-            const topic = message.destinationName;
-            const payload = message.payloadString;
-            
-            console.log(`[MQTT] Mensaje en ${topic}: ${payload}`);
-            addLog(`📬 Mensaje recibido: ${payload}`);
-
-            if (topic === 'buzon/status') {
-                updateMailboxState(payload);
-
-                // --- DETECTAR SI LLEGÓ PAQUETE Y NOTIFICAR ---
-                const cleanState = payload.toLowerCase().trim();
-                if (cleanState.includes('paquete recibido') || cleanState.includes('lleno')) {
-                    showNotification("¡TIENES CORREO! 📮", "Tu buzón inteligente ha detectado un nuevo paquete.");
-                }
-            }
-        }
-
-        // --- Actualizar Interfaz ---
         function updateMailboxState(state) {
             const cleanState = state.toLowerCase().trim();
             const isFull = cleanState.includes('paquete recibido') || cleanState.includes('lleno');
@@ -206,29 +97,122 @@
             }
         }
 
-        // --- ENVIAR COMANDO ---
-        function openMailbox() {
-            if (!client || !client.isConnected()) {
-                alert("No estás conectado al sistema.");
+        // --- 3. GESTIÓN DE NOTIFICACIONES ---
+        // Definida explícitamente en window para evitar errores de referencia
+        window.requestNotificationPermission = function() {
+            if (!("Notification" in window)) {
+                alert("Tu navegador no soporta notificaciones.");
                 return;
             }
+            Notification.requestPermission().then((permission) => {
+                if (permission === "granted") {
+                    addLog("🔔 Notificaciones activadas", "info");
+                    if(btnNotif) btnNotif.style.display = "none";
+                    showNotification("SmartPost", "¡Notificaciones listas!");
+                } else {
+                    addLog("⚠️ Permiso denegado", "error");
+                }
+            });
+        };
 
-            const topic = 'buzon/command';
-            const payload = 'open';
-
-            try {
-                var message = new Paho.MQTT.Message(payload);
-                message.destinationName = topic;
-                client.send(message);
-                addLog(`✔️ Comando 'open' enviado a ${topic}`, 'command');
-            } catch (err) {
-                addLog(`❌ Error al enviar: ${err.message}`, 'error');
+        function showNotification(title, body) {
+            if (Notification.permission === "granted") {
+                try {
+                    new Notification(title, {
+                        body: body,
+                        icon: "https://cdn-icons-png.flaticon.com/512/2665/2665038.png",
+                        vibrate: [200, 100, 200]
+                    });
+                } catch (e) {
+                    console.log("Error mostrando notificación: " + e);
+                }
             }
         }
 
-        // Iniciar todo
-        startConnection();
+        // Ocultar botón si ya tenemos permiso
+        if ("Notification" in window && Notification.permission === "granted" && btnNotif) {
+            btnNotif.style.display = "none";
+        }
 
+        // --- 4. CONEXIÓN MQTT ---
+        function startConnection() {
+            var clientId = "Web_" + new Date().getTime();
+            
+            try {
+                // Verificamos que las credenciales existan
+                if (typeof mqttHost === 'undefined') {
+                    addLog("Error: No se cargó credential.js", "error");
+                    return;
+                }
+
+                client = new Paho.MQTT.Client(mqttHost, Number(mqttPort), clientId);
+
+                client.onConnectionLost = onConnectionLost;
+                client.onMessageArrived = onMessageArrived;
+
+                var options = {
+                    useSSL: mqttUseSSL,
+                    userName: mqttUser,
+                    password: mqttPass,
+                    onSuccess: onConnect,
+                    onFailure: onFailure
+                };
+
+                addLog("Conectando a HiveMQ...", "info");
+                client.connect(options);
+            } catch (err) {
+                addLog("Error crítico al iniciar: " + err.message, "error");
+                console.error(err);
+            }
+        }
+
+        function onConnect() {
+            statusEl.textContent = '✅ Conectado';
+            statusEl.className = 'status connected';
+            addLog('✅ Conectado exitosamente');
+            client.subscribe('buzon/status');
+            addLog('📡 Suscrito a buzon/status');
+        }
+
+        function onFailure(message) {
+            statusEl.textContent = '❌ Error Conexión';
+            statusEl.className = 'status disconnected';
+            addLog(`❌ Falló la conexión: ${message.errorMessage}`, 'error');
+        }
+
+        function onConnectionLost(responseObject) {
+            if (responseObject.errorCode !== 0) {
+                statusEl.textContent = '⚠️ Desconectado';
+                statusEl.className = 'status disconnected';
+                addLog(`⚠️ Conexión perdida: ${responseObject.errorMessage}`, 'error');
+            }
+        }
+
+        function onMessageArrived(message) {
+            const payload = message.payloadString;
+            addLog(`📬 Recibido: ${payload}`);
+            updateMailboxState(payload);
+
+            // Notificar si llega paquete
+            const cleanState = payload.toLowerCase();
+            if (cleanState.includes('paquete') || cleanState.includes('lleno')) {
+                showNotification("¡CORREO!", "Llegó un paquete al buzón.");
+            }
+        }
+
+        window.openMailbox = function() {
+            if (!client || !client.isConnected()) {
+                alert("No estás conectado.");
+                return;
+            }
+            var message = new Paho.MQTT.Message("open");
+            message.destinationName = "buzon/command";
+            client.send(message);
+            addLog("✔️ Comando abrir enviado", "command");
+        };
+
+        // Iniciar
+        startConnection();
     </script>
 </body>
 </html>
