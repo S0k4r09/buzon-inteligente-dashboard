@@ -38,7 +38,9 @@
     <div class="container">
         <h1>📬 SmartPost - Buzón Inteligente</h1>
         <div id="status" class="status disconnected">Desconectado</div>
-
+        <button id="btnNotif" class="action-button" onclick="requestNotificationPermission()" style="background: #4a69bd; margin-top: 10px; font-size: 0.9em;">
+            🔔 ACTIVAR NOTIFICACIONES
+        </button>
         <div class="main-card" id="mailboxCard">
             <div class="mailbox-icon" id="mailboxIcon">📬</div>
             <div class="mailbox-status empty" id="mailboxStatus">ESTADO DESCONOCIDO</div>
